@@ -101,11 +101,14 @@ module.exports = {
 
 		for (i = 0; i < Math.min(numberMessages, filteredMessages.size); i++) {
 			// Delete somewhere in here
-			console.log(filteredMessages.at(i));
+			filteredMessages.at(i).delete();
 		}
-
 		
-
-		await interaction.reply('Pong!');
+		/* TODO:
+			- Security (Permissions)
+			- Follow-Up Response (I think thats what its called, pretty much tell Discord we will reply later)
+			- Message says how many deleted (maybe even says where the next message is?)
+		*/
+		// await interaction.reply('Pong!');
 	},
 };
