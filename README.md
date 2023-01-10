@@ -1,6 +1,6 @@
 # Chat Extinction  
 ## Description  
-Discord Bot that can delete multiple messages older than 2 weeks old by bypassing the bulk. Bot commands can only be used by users with the following permissions:  
+Discord Bot that can delete multiple messages older than 2 weeks old by bypassing the bulk delete API. Bot commands can only be used by users with the following permissions:  
 - Send Messages
 - Send Messages in Threads
 - Manage Messages
