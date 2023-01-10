@@ -3,7 +3,7 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('purge')
-		.setDescription("Clears a user's chat messages specified by their Discord ID from Start Timestamp to Stop Timestamp")
+		.setDescription("Clears a user's chat messages using Discord ID, message link, and number")
 		.addStringOption(option =>
 			option.setName('discord-id')
 				.setDescription("The user's Discord ID")
@@ -15,15 +15,21 @@ module.exports = {
 		.addIntegerOption(option =>
 			option.setName('number-messages')
 				.setDescription("The number of messages to delete (1 to 500)")
-				.setRequired(true)),
+				.setRequired(true))
+		// sets permissions required to use command
+		// includes perms: 
+		// 		Send Messages, Send Messages in Threads, Manage Messages, Manage Threads, Use Slash Commands
+		.setDefaultMemberPermissions(294205270016),
 	async execute(client, interaction) {
+		await interaction.deferReply({ content: 'Command received...', ephemeral: false });
+
 		// Parse Parameters (they are required so they will always exist, no undefined checks needed)
 		const userId = await interaction.options.getString("discord-id");
 		const messageLink = await interaction.options.getString("message-link");
 		var numberMessages = await interaction.options.getInteger("number-messages");
 
 		if (numberMessages > 500 || numberMessages < 0) {
-			await interaction.reply("Supplied number of messages is invalid!");
+			await interaction.editReply("Supplied number of messages is invalid!");
 			return;
 		}
 
@@ -42,7 +48,7 @@ module.exports = {
 
 		// Fail Out (Cleanly) if User can't be found
 		if (user == undefined) {
-			await interaction.reply("Supplied Discord ID is not associated with a Discord Account!");
+			await interaction.editReply("Supplied Discord ID is not associated with a Discord Account!");
 			return;
 		}
 
@@ -60,7 +66,7 @@ module.exports = {
 
 		// Fail Out (Cleanly) if provided link cannot be parsed.
 		if (linkData == null) {
-			await interaction.reply("Supplied Message Link is invalid/ill-formatted!")
+			await interaction.editReply("Supplied Message Link is invalid/ill-formatted!")
 			return;
 		}
 
@@ -72,7 +78,7 @@ module.exports = {
 		// Verify Bot has access to the specified Guild (Server) that the message is in.
 		const botGuilds = await client.guilds.fetch();
 		if (!botGuilds.has(guildId)) {
-			await interaction.reply("Supplied Message Link is for an inaccessible guild!")
+			await interaction.editReply("Supplied Message Link is for an inaccessible guild!")
 			return;
 		}
 
@@ -91,7 +97,7 @@ module.exports = {
 
 		// Fail Out (Cleanly) if Channel can't be found
 		if (channel == undefined) {
-			await interaction.reply("Supplied Channel ID is not associated with an actual channel!");
+			await interaction.editReply("Supplied Channel ID is not associated with an actual channel!");
 			return;
 		}
 
@@ -99,15 +105,30 @@ module.exports = {
 		var messageArray = await channel.messages.fetch({ before: messageId })
 		var filteredMessages = messageArray.filter(message => (message.author.id == userId));
 
+		var attemptMessage = "Attempting to delete " + numberMessages + " message(s)...";
+
+		await interaction.editReply(attemptMessage);
+
+		var messagesDeleted = 0;
+
 		for (i = 0; i < Math.min(numberMessages, filteredMessages.size); i++) {
 			// Delete somewhere in here
 			filteredMessages.at(i).delete();
+			messagesDeleted++;
+		}
+
+		if (messagesDeleted <= 0) {
+			var successMessage = "Error: No messages deleted.";
+		} else {
+			var successMessage = "Successfully deleted " + messagesDeleted + " message(s).";
 		}
 		
+		await interaction.followUp(successMessage);
+
 		/* TODO:
-			- Security (Permissions)
-			- Follow-Up Response (I think thats what its called, pretty much tell Discord we will reply later)
-			- Message says how many deleted (maybe even says where the next message is?)
+			- Security (Permissions) - DONE
+			- Follow-Up Response (I think thats what its called, pretty much tell Discord we will reply later) - DONE
+			- Message says how many deleted (maybe even says where the next message is?) - DONE
 		*/
 		// await interaction.reply('Pong!');
 	},
