@@ -116,6 +116,9 @@ module.exports = {
 					break;
 				}
             }
+			else {
+				emptyLoopCount = 0; // resets to 0 if messageArray's length increased
+			}
         }
 
 		var filteredMessages = messageArray.filter(message => (message.author.id == userId));
