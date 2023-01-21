@@ -28,7 +28,7 @@ module.exports = {
 		const messageLink = await interaction.options.getString("message-link");
 		var numberMessages = await interaction.options.getInteger("number-messages");
 
-		if (numberMessages > 500 || numberMessages < 0) {
+		if (numberMessages > 500 || numberMessages <= 0) {
 			await interaction.editReply("Supplied number of messages is invalid!");
 			return;
 		}
@@ -102,12 +102,31 @@ module.exports = {
 		}
 
 		// Verify Message Exists
-		var messageArray = await channel.messages.fetch({ before: messageId })
+        var messageArray = await channel.messages.fetch({ before: messageId, limit: 100})
+		var emptyLoopCount = 0;
+        while (messageArray.Length != 500) {
+            var tempArrayLength = messageArray.Length; // saves length of messageArray before appending to it
+            var lastMessageID = messageArray[messageArray.Length - 1].id; // saves ID of the last message
+            messageArray.append(await channel.messages.fetch({ before: lastMessageID, limit: 100}));
+
+          	// With some check to make sure that we haven't reached the end of messages in order to avoid infinite loop
+          	if (messageArray.Length == tempArrayLength) {
+				emptyLoopCount++; // increments if messageArray's length doesn't increase
+                if (emptyLoopCount > 5) { // breaks if 5 loops haven't increased messageArray length
+					break;
+				}
+            }
+        }
+
 		var filteredMessages = messageArray.filter(message => (message.author.id == userId));
 
-		var attemptMessage = "Attempting to delete " + numberMessages + " message(s)...";
+		// var attemptMessage = "Attempting to delete " + numberMessages + " message(s)...";
 
-		await interaction.editReply(attemptMessage);
+		// await interaction.editReply(attemptMessage);
+
+		var attemptMessageLength = "Now deleting " + messageArray.Length + "message(s)...";
+
+		await interaction.editReply(attemptMessageLength);
 
 		var messagesDeleted = 0;
 
