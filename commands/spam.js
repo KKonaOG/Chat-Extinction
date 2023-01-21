@@ -14,6 +14,7 @@ module.exports = {
 
         var numberMessages = await interaction.options.getInteger("number");
 
+        // function times out before 500
 		if (numberMessages > 450 || numberMessages <= 0) {
 			await interaction.editReply("Supplied number of messages is invalid!");
 			return;
